@@ -26,48 +26,50 @@ void MakeAsmNode(CompNode_t* node, StackString_t* variables, StackFunc_t* functi
     switch (node->type)
     {
         case FUNC_INIT:
-            {
-                // тут должна быть метка на функцию    
-                $("push rbp\n");
-                $("mov rbp, rsp\n");
+        {
+            // тут должна быть метка на функцию    
+            int index_func = node->value.index_var;
+            Function_t* func_init = &(functions->data[index_func]);
 
-                // Function_t func = {};
-                // func.name       = node->value.var;
-                int index_func = node->value.index_var;
-                Function_t* func_init = &(functions->data[index_func]);
-                
-                // StackPrint(variables);
+            $("%s:\n", func_init->name);
+            $("push rbp\n");
+            $("mov rbp, rsp\n");
 
-                func_init->begin_params = variables->size;
-                // aa("begin_params = [%d]\n", func_init->begin_params);
-                ParsingParams(node->left, variables, func_init);
-    STRING_PUSH(variables, strdup("__CALL_RET__")); // нужен для удобного обращения к параметрам и аргументам в функции
-    STRING_PUSH(variables, strdup("__PUSH_RBP__")); // нужен для удобного обращения к параметрам и аргументам в функции
-                // StackPrint(variables);
-                func_init->middle = variables->size;
-                // aa("middle_params = [%d]\n", func_init->middle);
-                func_init->end_vars   = variables->size;
+            // Function_t func = {};
+            // func.name       = node->value.var;
+            
+            // StackPrint(variables);
 
-                MakeAsmNode(node->right, variables, functions, func_init);            
-                // StackPrint(variables);
-                // aa("end_params = [%d]\n", func_init->end_vars);
+            func_init->begin_params = variables->size;
+            // aa("begin_params = [%d]\n", func_init->begin_params);
+            ParsingParams(node->left, variables, func_init);
+            STRING_PUSH(variables, strdup("__CALL_RET__")); // нужен для удобного обращения к параметрам и аргументам в функции
+            STRING_PUSH(variables, strdup("__PUSH_RBP__")); // нужен для удобного обращения к параметрам и аргументам в функции
+            // StackPrint(variables);
+            func_init->middle   = variables->size;
+            // aa("middle_params = [%d]\n", func_init->middle);
+            func_init->end_vars = variables->size;
 
-                $("pop rbp\n");
-                break;
-            }
+            MakeAsmNode(node->right, variables, functions, func_init);            
+            // StackPrint(variables);
+            // aa("end_params = [%d]\n", func_init->end_vars);
+            
+            $("pop rbp\n");
+            $("ret\n");
+            break;
+        }
         case FUNC: 
-            {
-    //          проверка на инициализацию функции
-    // push args
-                int index_func = node->value.index_var;
-                Function_t* func_init = &(functions->data[index_func]);
+        {
+            int index_func = node->value.index_var;
+            Function_t* func_init = &(functions->data[index_func]);
 
-                PushFuncArgs(node->left, variables, func_init);
-            // case VAR_INIT:
-            //     STRING_PUSH(variables, node->value.var)
-                // $("")
-                break;
-            }
+            PushFuncArgs(node->left, variables, func_init);
+
+           $("call %s\n", func_init->name);
+           $("add rsp, %d * 8\n", func_init->middle - func_init->begin_params - 2); // -2 _CALL_ADR_ _PUSH_RBP_
+            break;
+        }
+
         case OP:
             MakeAsmOper(node, variables, functions, func);
             break;
@@ -191,6 +193,10 @@ void MakeAsmOper(CompNode_t* node, StackString_t* variables, StackFunc_t* functi
             MakeAsmNode(node->left, variables, functions, func);
             $("add rax, rbx\n");
         }
+
+        case RETURN:
+            MakeAsmNode(node->left, variables, functions, func);
+            break;
 
 // проверка на то, что там переменная, число или выражение  
         default:

@@ -1,5 +1,7 @@
-func alice(var a, var c, var d)
+func simple(var a, var c, var d)
 {
 	var b = 1;
-	alice(b, a, c);
+	simple(b, a, c);
+
+	return 1;
 };
