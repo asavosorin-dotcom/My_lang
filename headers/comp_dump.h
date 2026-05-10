@@ -1,0 +1,24 @@
+#ifndef _COMP_DUMP_
+#define _COMP_DUMP_
+
+#include <stdio.h>
+#include <stdlib.h>
+
+#include "compile_struct.h"
+#include "stack.h"
+#include "stack_tokens.h"
+
+extern FILE* file_htm;
+
+void CompDumpNode  (CompNode_t* node, FILE* file_dump, StackString_t variables);
+void CompDumpImage (CompNode_t* node, StackString_t variables);
+void CompDump      (CompNode_t* node, const char* text, StackString_t variables);
+
+void CompDumpNodeString  (CompNode_t* node, FILE* file_dump);
+void CompDumpImageString (CompNode_t* node);
+void CompDumpString      (CompNode_t* node, const char* text);
+
+#define PRINT_IMAGE(...) fprintf(file_dump, __VA_ARGS__)
+#define PRINT_HTM(...)   fprintf(file_htm, __VA_ARGS__)
+
+#endif
