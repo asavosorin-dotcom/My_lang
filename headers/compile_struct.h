@@ -7,10 +7,11 @@
 
 #define OP_CAPASITY   35
 #define TYPE_CAPASITY 6
+#define CONDITIONS_CAPACITY 6
 
 extern struct Operator_t arr_operators[OP_CAPASITY];
 extern struct Type_inf_t arr_types[TYPE_CAPASITY];
-
+extern struct Condition_Jump_t arr_conditions[CONDITIONS_CAPACITY];
 enum Operator_val_t {
                      ADD       = 0, 
                      SUB       = 1, 
@@ -28,12 +29,16 @@ enum Operator_val_t {
                      SINH      = 13,
                      COSH      = 14, 
                      TANH      = 15,
-                     EQUANT    = 16, 
-                     BELOW_EQ  = 17,
-                     ABOVE_EQ  = 18,
-                     NO_EQUANT = 19,
-                     BELOW     = 20,
-                     ABOVE     = 21,
+// ================== Logical =============================
+                     LOGIC_BEGIN = 16,
+                     EQUANT      = 16, 
+                     BELOW_EQ    = 17,
+                     ABOVE_EQ    = 18,
+                     NO_EQUANT   = 19,
+                     BELOW       = 20,
+                     ABOVE       = 21,
+                     LOGIC_END   = 21, 
+// ========================================================
                      EQ        = 22,
                      SEP       = 23,
                      IF        = 24,
@@ -90,6 +95,12 @@ struct CompNode_t
     CompNode_t* left;
     CompNode_t* right;
     CompNode_t* parent;
+};
+
+struct Condition_Jump_t
+{
+    Operator_val_t oper;
+    const char*    jump_name; 
 };
 
 #define PRINT_ERR(...) printf(RED "%s:%d: ", __FILE__, __LINE__); printf(__VA_ARGS__); printf("\n" RESET);

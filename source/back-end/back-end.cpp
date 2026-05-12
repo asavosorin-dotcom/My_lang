@@ -6,17 +6,29 @@
 
 int node_is_op(CompNode_t* node, Operator_val_t val);
 int get_index_var(CompNode_t* node, StackString_t* variables, Function_t* func);
+Flag_t node_is_logical(CompNode_t* node);
 // брать название из ключей компилляции
 FILE* file_asm = fopen("./compile_files/file_asm.s", "w");
 
 // ============================================== Rules =================================================
+// В относительной адресации func->middle эквивалентен rbp  
 // Все результаты выражений и возвращаемые значения функций лежат в rax 
 // Для ассемблирования части кода важно из какой функции она была вызвана для регулирования областей видимости
+// main обрабатывается точно также только метка будет _start
+// сохранять в стеке результаты промежуточных вычислений, потому чтобы регистры могут сломаться
+// ------------------------------------------------------------------------------------------------------
+// Возможно у if будет счетчик, который увеличивается, когда есть if, и уменьшается, когда тело if заканчивается
+//
 // ======================================================================================================
 
-void MakeAsmCode(CompNode_t* root, StackFunc_t* functions, StackString_t* variables)
+void MakeAsmCode(CompNode_t* root, StackString_t* variables, StackFunc_t* functions)
 {
-    // MakeAsmNode(root, functions, variables);
+    $("section .text\n"); 
+    $("global _start\n"); 
+    MakeAsmNode(root,variables, functions, NULL);
+    $("mov rax, 0x3c\n");
+    $("xor rdx, rdx\n");
+    $("syscall\n");
 }
 
 void MakeAsmNode(CompNode_t* node, StackString_t* variables, StackFunc_t* functions, Function_t* func)
@@ -48,14 +60,17 @@ void MakeAsmNode(CompNode_t* node, StackString_t* variables, StackFunc_t* functi
             // StackPrint(variables);
             func_init->middle   = variables->size;
             // aa("middle_params = [%d]\n", func_init->middle);
-            func_init->end_vars = variables->size;
+            int count_var = GetCountVariables(node->right, 0);
+            func_init->end_vars = func_init->middle + count_var;
+            $("sub rsp, %d * 8\n", count_var);
 
             MakeAsmNode(node->right, variables, functions, func_init);            
             // StackPrint(variables);
+            $("add rsp, %d * 8\n", count_var);
             // aa("end_params = [%d]\n", func_init->end_vars);
             
             $("pop rbp\n");
-            $("ret\n");
+            if (strcmp(func_init->name, "_start") != 0) {$("ret\n")};
             break;
         }
         case FUNC: 
@@ -75,8 +90,8 @@ void MakeAsmNode(CompNode_t* node, StackString_t* variables, StackFunc_t* functi
             break;
 
         case VAR_INIT:
-            func->end_vars += 1;
-            STRING_PUSH(variables, node->value.var);
+            // func->end_vars += 1;
+            // STRING_PUSH(variables, node->value.var);
             [[fallthrough]]
         case VAR:
         {
@@ -188,15 +203,20 @@ void MakeAsmOper(CompNode_t* node, StackString_t* variables, StackFunc_t* functi
         
         case ADD:
         {
-            MakeAsmNode(node->right, variables, functions, func);
-            $("mov rbx, rax\n");
             MakeAsmNode(node->left, variables, functions, func);
+            $("mov rbx, rax\n");
+            MakeAsmNode(node->right, variables, functions, func);
             $("add rax, rbx\n");
+            break;
         }
 
         case RETURN:
             MakeAsmNode(node->left, variables, functions, func);
             break;
+    
+        // case IF:
+        //     MakeAsmIf(node, varioables, functions, func);
+        //     break;
 
 // проверка на то, что там переменная, число или выражение  
         default:
@@ -204,6 +224,34 @@ void MakeAsmOper(CompNode_t* node, StackString_t* variables, StackFunc_t* functi
     }
 }
 
+void MakeAsmIf(CompNode_t* node, StackString_t* variables, StackFunc_t* functions, Function_t* func)
+{
+// cmp and jump_condition 
+// должен быть массив соответствий jump_cond и условных операторов
+// есть два варианта: сравнивать разность с нулем или между собой,
+    MakeAsmNode(node->left, variables, functions, func); // condition 
+    
+}
+
+Flag_t node_is_logical(CompNode_t* node)
+{
+    if (node->type != OP) return NO;
+    if (LOGIC_BEGIN <= node->value.oper && (node->value.oper <= LOGIC_END)) return YES;
+
+    return NO;
+}
+
+// void MakeAsmCondition(CompNode_t* node, StackString_t* variables, StackFunc_t* functions, Function_t* func)
+// {
+//     if (node_is_logical(node))
+//     {
+//         MakeAsmNode(node->left, variables, functions, func);
+//         $()
+//
+//         $("%s\n", arr_conditions[node->value.oper].jump_name);
+//     }
+// }
+//
 int get_index_var(CompNode_t* node, StackString_t* variables, Function_t* func)
 {
     if (!node) return -1;
@@ -228,3 +276,16 @@ int get_index_var(CompNode_t* node, StackString_t* variables, Function_t* func)
     return -1;
 }
 
+int GetCountVariables(CompNode_t* node, int count_now)
+{
+    int count = 0;
+    
+    if (!node) return 0;
+
+    if (node->type == VAR_INIT) count++;
+
+    count += GetCountVariables(node->left,  count);
+    count += GetCountVariables(node->right, count);
+    
+    return count;
+}

@@ -264,9 +264,13 @@ CompNode_t* GetOperation(PARAMS_FUNC)
     
     (*token_pos)++;
     
+    // PRINT_ERR("TYPE: %s\n", arr_types[sep->type].name);
+    // if (sep->type == OP) PRINT_ERR("OPER: [%s]\n", arr_operators[sep->value.oper].name); 
+
     if (!node_is_op(sep, SEP)) 
     {
         PRINT_ERR("Syntax error SEP on line [%d]\n", node_left->num_string);
+        fflush(stdout);
         return NULL;
     }
     

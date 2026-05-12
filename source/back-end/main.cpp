@@ -1,6 +1,7 @@
 #include "../../headers/back-end/main.h"
 // пусть variables не заполняется для стекового фреймах
 // полный ахтунг с обращением к параметру
+// !!!!!!!!!!! Добавляю в nasm section and global 
 
 int main()
 {
@@ -22,7 +23,7 @@ int main()
 
     // StackPrint(&variables);
 
-    MakeAsmNode(root, &variables, &functions, NULL);
+    MakeAsmCode(root, &variables, &functions);
 
     STRING_DTOR(&variables); 
     FUNC_DTOR(&functions);

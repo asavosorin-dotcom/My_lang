@@ -73,7 +73,8 @@ typedef struct {
 } Passport_t;
 #endif
 
-struct StackFunc_t{
+struct StackFunc_t
+{
 
     StackFuncElement_t* data;
     size_t size;
