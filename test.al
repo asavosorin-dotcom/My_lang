@@ -1,7 +1,13 @@
-func simple(var a, var c, var d)
+func sum (var a, var c, var d)
 {
-	var b = 1;
-	simple(b, a, c);
+	var b = a + c + d;
+	return b;
+};
 
-	return 1;
+func _start()
+{
+	if (5 == 33)
+	{
+		sum(1, 2, 3);
+	};
 };

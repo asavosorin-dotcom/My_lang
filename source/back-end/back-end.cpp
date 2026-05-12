@@ -20,6 +20,7 @@ FILE* file_asm = fopen("./compile_files/file_asm.s", "w");
 // Возможно у if будет счетчик, который увеличивается, когда есть if, и уменьшается, когда тело if заканчивается
 //
 // ======================================================================================================
+int count_label = 0;
 
 void MakeAsmCode(CompNode_t* root, StackString_t* variables, StackFunc_t* functions)
 {
@@ -70,7 +71,7 @@ void MakeAsmNode(CompNode_t* node, StackString_t* variables, StackFunc_t* functi
             // aa("end_params = [%d]\n", func_init->end_vars);
             
             $("pop rbp\n");
-            if (strcmp(func_init->name, "_start") != 0) {$("ret\n")};
+            if (strcmp(func_init->name, "_start") != 0) {$("ret\n");}
             break;
         }
         case FUNC: 
@@ -204,8 +205,10 @@ void MakeAsmOper(CompNode_t* node, StackString_t* variables, StackFunc_t* functi
         case ADD:
         {
             MakeAsmNode(node->left, variables, functions, func);
-            $("mov rbx, rax\n");
+            // $("mov rbx, rax\n");
+            $("push rax\n");
             MakeAsmNode(node->right, variables, functions, func);
+            $("pop rbx\n");
             $("add rax, rbx\n");
             break;
         }
@@ -214,9 +217,9 @@ void MakeAsmOper(CompNode_t* node, StackString_t* variables, StackFunc_t* functi
             MakeAsmNode(node->left, variables, functions, func);
             break;
     
-        // case IF:
-        //     MakeAsmIf(node, varioables, functions, func);
-        //     break;
+        case IF:
+            MakeAsmIf(node, variables, functions, func);
+            break;
 
 // проверка на то, что там переменная, число или выражение  
         default:
@@ -229,29 +232,46 @@ void MakeAsmIf(CompNode_t* node, StackString_t* variables, StackFunc_t* function
 // cmp and jump_condition 
 // должен быть массив соответствий jump_cond и условных операторов
 // есть два варианта: сравнивать разность с нулем или между собой,
-    MakeAsmNode(node->left, variables, functions, func); // condition 
-    
+    MakeAsmCondition(node->left, variables, functions, func); // condition 
+    int label_num = count_label;
+    MakeAsmNode(node->right, variables, functions, func);
+    $("LBLEND%d:\n\n", label_num);
 }
 
 Flag_t node_is_logical(CompNode_t* node)
 {
     if (node->type != OP) return NO;
-    if (LOGIC_BEGIN <= node->value.oper && (node->value.oper <= LOGIC_END)) return YES;
+    if ((LOGIC_BEGIN <= node->value.oper) && (node->value.oper <= LOGIC_END)) return YES;
 
     return NO;
 }
 
-// void MakeAsmCondition(CompNode_t* node, StackString_t* variables, StackFunc_t* functions, Function_t* func)
-// {
-//     if (node_is_logical(node))
-//     {
-//         MakeAsmNode(node->left, variables, functions, func);
-//         $()
-//
-//         $("%s\n", arr_conditions[node->value.oper].jump_name);
-//     }
-// }
-//
+void MakeAsmCondition(CompNode_t* node, StackString_t* variables, StackFunc_t* functions, Function_t* func)
+{
+    count_label++;
+    $("\n\nLBLCOND%d:\n", count_label);
+
+    if (node_is_logical(node))
+    {
+        MakeAsmNode(node->left, variables, functions, func);
+        $("push rax\n");
+        MakeAsmNode(node->right, variables, functions, func);
+        $("pop rbx\n");
+        
+        $("cmp rbx, rax\n");
+
+        $("%s LBLEND%d\n", arr_conditions[node->value.oper - LOGIC_BEGIN].jump_name, count_label); // возможно придется поменять JUMP на противоположные
+    }
+
+    else 
+    {
+        MakeAsmNode(node, variables, functions, func);
+    
+        $("cmp rax, 0\n");
+        $("je LBLEND%d\n", count_label);
+    }
+}
+
 int get_index_var(CompNode_t* node, StackString_t* variables, Function_t* func)
 {
     if (!node) return -1;

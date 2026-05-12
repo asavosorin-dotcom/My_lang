@@ -91,10 +91,10 @@ Type_inf_t arr_types[TYPE_CAPASITY] =  {"NUM"      , NUM      ,
                                         "FUNC_INIT", FUNC_INIT,
                                        };
 
-Condition_Jump_t arr_conditions[CONDITIONS_CAPACITY] = {EQUANT,    "je ", 
-                                                        BELOW_EQ,  "jbe ", 
-                                                        ABOVE_EQ,  "jge ",
-                                                        NO_EQUANT, "jne ",
-                                                        BELOW,     "jb ", 
-                                                        ABOVE,     "jg ", 
+Condition_Jump_t arr_conditions[CONDITIONS_CAPACITY] = {EQUANT,    "jne ", 
+                                                        BELOW_EQ,  "jg ", 
+                                                        ABOVE_EQ,  "jb ",
+                                                        NO_EQUANT, "je ",
+                                                        BELOW,     "jge ", 
+                                                        ABOVE,     "jbe ", 
                                                        };
