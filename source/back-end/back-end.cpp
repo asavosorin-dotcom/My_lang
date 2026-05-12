@@ -18,7 +18,7 @@ FILE* file_asm = fopen("./compile_files/file_asm.s", "w");
 // сохранять в стеке результаты промежуточных вычислений, потому чтобы регистры могут сломаться
 // ------------------------------------------------------------------------------------------------------
 // Возможно у if будет счетчик, который увеличивается, когда есть if, и уменьшается, когда тело if заканчивается
-//
+// Во-первых при обращении к параметрам в стеке надо + поменять на -, во вторых из-за stdcall надо менять арифметику расчета адреса. Наверное проще всего переменные тоже пушить в обратном поярдке в стек, если это параметры
 // ======================================================================================================
 int count_label = 0;
 
@@ -59,7 +59,7 @@ void MakeAsmNode(CompNode_t* node, StackString_t* variables, StackFunc_t* functi
             STRING_PUSH(variables, strdup("__CALL_RET__")); // нужен для удобного обращения к параметрам и аргументам в функции
             STRING_PUSH(variables, strdup("__PUSH_RBP__")); // нужен для удобного обращения к параметрам и аргументам в функции
             // StackPrint(variables);
-            func_init->middle   = variables->size;
+            func_init->middle   = variables->size - 1;
             // aa("middle_params = [%d]\n", func_init->middle);
             int count_var = GetCountVariables(node->right, 0);
             func_init->end_vars = func_init->middle + count_var;
@@ -97,7 +97,7 @@ void MakeAsmNode(CompNode_t* node, StackString_t* variables, StackFunc_t* functi
         case VAR:
         {
             int relative_index = get_index_var(node, variables, func) - func->middle;
-            $("mov rax, [rbp + (%d) * 8]\n", relative_index);
+            $("mov rax, [rbp - (%d) * 8]\n", relative_index);
             break;
         }
 
@@ -120,8 +120,8 @@ void ParsingParams(CompNode_t* node, StackString_t* variables, Function_t* func)
         case OP:
             if (node->value.oper == COMMA)
             {
-                    if (node->left ) ParsingParams(node->left,  variables, func);
                     if (node->right) ParsingParams(node->right, variables, func);
+                    if (node->left ) ParsingParams(node->left,  variables, func);
             }
 
             else 
@@ -155,7 +155,7 @@ void PushFuncArgs(CompNode_t* node, StackString_t* variables, Function_t* func)
         {
             int index = get_index_var(node, variables, func);
             int relative_index_var = index - func->middle;
-            $("mov rax, [rbp + (%d) * 8]\n", relative_index_var); // хранить в таблице имен с переменными их размеры
+            $("mov rax, [rbp - (%d) * 8]\n", relative_index_var); // хранить в таблице имен с переменными их размеры
             $("push rax\n");
             break;
         }
@@ -197,7 +197,7 @@ void MakeAsmOper(CompNode_t* node, StackString_t* variables, StackFunc_t* functi
 
             int relative_index = get_index_var(node->left, variables, func) - func->middle; 
             MakeAsmNode(node->right, variables, functions, func);
-            $("mov [rbp + (%d) * 8], rax\n", relative_index);
+            $("mov [rbp - (%d) * 8], rax\n", relative_index);
             break;
 //  Дописать!!!!==========================================================================
         }
@@ -221,6 +221,10 @@ void MakeAsmOper(CompNode_t* node, StackString_t* variables, StackFunc_t* functi
             MakeAsmIf(node, variables, functions, func);
             break;
 
+        case WHILE:
+            MakeAsmWhile(node, variables, functions, func);
+            break;
+
 // проверка на то, что там переменная, число или выражение  
         default:
             break;
@@ -235,6 +239,15 @@ void MakeAsmIf(CompNode_t* node, StackString_t* variables, StackFunc_t* function
     MakeAsmCondition(node->left, variables, functions, func); // condition 
     int label_num = count_label;
     MakeAsmNode(node->right, variables, functions, func);
+    $("LBLEND%d:\n\n", label_num);
+}
+
+void MakeAsmWhile(CompNode_t* node, StackString_t* variables, StackFunc_t* functions, Function_t* func)
+{
+    MakeAsmCondition(node->left, variables, functions, func);
+    int label_num = count_label; 
+    MakeAsmNode(node->right, variables, functions, func);
+    $("jmp LBLCOND%d\n", label_num);
     $("LBLEND%d:\n\n", label_num);
 }
 
