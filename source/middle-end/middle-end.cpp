@@ -3,6 +3,8 @@
 static bool flag_change = 0;
 int nodeisnum(CompNode_t* node, double num);
 void nodenull(CompNode_t* node);
+Flag_t nodeismath(CompNode_t* node);
+
 CompNode_t* cpy_left  (CompNode_t* node);
 CompNode_t* cpy_right (CompNode_t* node);
 
@@ -46,7 +48,7 @@ CompNode_t* CompOptimizConst(CompNode_t* node)
     if (node->left == NULL || node->right == NULL)
         return node;
 
-    if (node->left->type == NUM && node->right->type == NUM)
+    if ((node->left->type == NUM && node->right->type == NUM) && (nodeismath(node)))
     {
         flag_change = 1;
         double num = CompSolveExpresion(node);
@@ -276,3 +278,11 @@ int CompSolveExpresion(CompNode_t* root)
                 return 0;
         }
     }
+
+Flag_t nodeismath(CompNode_t* node)
+{
+    if (node->type != OP) return NO;
+    if ((MATH_OP_BEGIN <= node->value.oper) && (node->value.oper <= MATH_OP_END)) return YES;
+
+    return NO;
+}

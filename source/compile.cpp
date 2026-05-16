@@ -1,5 +1,5 @@
 #include "../headers/compile.h"
-#define BACK_END 
+// #define BACK_END 
 
 CompNode_t* CompNodeCtor(Type_t type)
 {
