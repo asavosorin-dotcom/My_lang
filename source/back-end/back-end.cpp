@@ -237,17 +237,20 @@ void MakeAsmOper(CompNode_t* node, StackString_t* variables, StackFunc_t* functi
             $("push rax\n");
             MakeAsmNode(node->left, variables, functions, func);
             $("pop rbx\n");
-            $("mul rax, rbx\n");
+            $("mul rbx\n");
+            $("and rdx, 1 << 31\n");
+            $("or rax,  rdx\n");
             break;
-
         
         case DIV:
-            MakeAsmNode(node->left, variables, functions, func);
+            $("xor rdx, rdx\n");
+            MakeAsmNode(node->right, variables, functions, func);
             // $("mov rbx, rax\n");
             $("push rax\n");
-            MakeAsmNode(node->right, variables, functions, func);
+            MakeAsmNode(node->left, variables, functions, func);
             $("pop rbx\n");
-            $("div rax, rbx\n");
+            $("cqo\n");
+            $("idiv rbx\n");
             break;
 
         case RETURN:
