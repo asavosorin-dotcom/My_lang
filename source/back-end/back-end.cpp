@@ -364,11 +364,13 @@ int GetCountVariables(CompNode_t* node, int count_now)
     return count;
 }
 
+#define MAKE_STD_FUNC(funcname)     const char* funcname ## _std = #funcname".s";                          \
+                                    char* funcname ## _code = CreateBuffer(funcname ## _std).buff + 1; \
+                                    $("%s\n\n", funcname ## _code);                                    \
+                                    free(funcname ## _code - 1);
+
 void PrintStdLib(void)
 {
-    const char* stdlib_name = "print.s";
-    char* stdlib_code = CreateBuffer(stdlib_name).buff + 1;
-    $("%s\n\n", stdlib_code);
-
-    free(stdlib_code - 1);
+    MAKE_STD_FUNC(print)
+    MAKE_STD_FUNC(scan)
 }
