@@ -33,7 +33,7 @@ Operator_t arr_operators[OP_CAPASITY] = {
                                          ")"     , CountHash(")")     ,   "_CLOSE_BRACK_",       PAP_CLOSE,
                                          ","     , CountHash(",")     ,   "_COMMA_",             COMMA, 
                                          "return", CountHash("return"),   "_RETURN_",            RETURN,
-                                         "print",  CountHash("print"),    "_PRINT_",             PRINT,
+                                         // "print",  CountHash("print"),    "_PRINT_",             PRINT,
                                          "draw" ,  CountHash("draw"),     "_DRAW_",              DRAW  ,
                                          "DRAWram", CountHash("DRAWram"), "_DRAW_RAM_",          DRAW_RAM, 
                                          };
