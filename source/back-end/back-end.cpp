@@ -87,6 +87,9 @@ void MakeAsmNode(CompNode_t* node, StackString_t* variables, StackFunc_t* functi
             break;
         }
 
+        case PROTO:
+            break;
+
         case OP:
             MakeAsmOper(node, variables, functions, func);
             break;

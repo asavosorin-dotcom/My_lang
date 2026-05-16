@@ -5,6 +5,7 @@ Type_t         GetType  (int* pos, char* buffer);
 char*          GetString(int* pos, char* buffer);
 int            GetNumber(int* pos, char* buffer);
 
+
 void CompPrintNode(const CompNode_t* node, FILE* file_print, StackString_t* variables, StackString_t* functions)
 {
     #define PRINT_FILE(...) fprintf(file_print, __VA_ARGS__)
@@ -31,8 +32,10 @@ void CompPrintNode(const CompNode_t* node, FILE* file_print, StackString_t* vari
         break;
 
     case FUNC:
-   [[fallthrow]] 
+   [[fallthrough]] 
     case FUNC_INIT:
+   [[fallthrough]] 
+    case PROTO:
         PRINT_FILE("%s\"", functions->data[node->value.index_var]);
 
     default:
@@ -112,14 +115,33 @@ CompNode_t* ReadNodeBack(char* buffer, StackString_t* variables, StackFunc_t* fu
                     val.var = string;
                 }
                 break;
-
-            case FUNC_INIT:
+            
+            case PROTO:
                 {
                     Function_t func = {};
                     
                     func.name = GetString(&pos, buffer);
                     FUNC_PUSH(functions, func);
                     val.index_var = functions->size - 1;
+                    break;
+                }
+
+            case FUNC_INIT:
+                {
+                    Function_t func = {};
+                    
+                    func.name = GetString(&pos, buffer);
+                    int index_func = index_func_in_stk(functions, func.name);
+
+                    if (index_func == NO_INDEX) 
+                    {
+                        FUNC_PUSH(functions, func);
+                        val.index_var = functions->size - 1;
+                    }
+                    else 
+                    {
+                        val.index_var = index_func;    
+                    }
                     break;
                 }
 
@@ -206,6 +228,8 @@ CompNode_t* ReadNode(char* buffer)
             case FUNC:
             [[fallthrough]]
             case FUNC_INIT:
+            [[fallthrough]]
+            case PROTO:
                 val.var = GetString(&pos, buffer);
                 break;
 
@@ -364,10 +388,12 @@ void CompPrintNodeMiddle(const CompNode_t* node, FILE* file_print)
         break;
 
     case VAR_INIT:
-    [[fallthrow]] 
+    [[fallthrough]] 
     case FUNC:
-    [[fallthrow]] 
+    [[fallthrough]] 
     case FUNC_INIT:
+    [[fallthrough]]
+    case PROTO:
         PRINT_FILE("%s\"", node->value.var);
         break;
 
@@ -491,4 +517,14 @@ int GetNumber(int* pos, char* buffer)
     *pos += len;
 
     return num;
+}
+
+int index_func_in_stk(StackFunc_t* functions, char* func_name)
+{
+    for (int index = 0; index < functions->size; index++)
+    {
+        if (strcmp(func_name, functions->data[index].name) == 0) return index;
+    }
+
+    return NO_INDEX;
 }

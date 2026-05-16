@@ -65,8 +65,6 @@ size_t GetLex(const char* s, StackTok_t* tokens, StackString_t* variables, Stack
 
         if (strncmp(s, "func", 4) == 0)
         {
-            Flag_t func_need_in_push = YES;
-
             node = CompNodeCtor(FUNC_INIT);
             node->num_string = count_line;
 
@@ -77,17 +75,17 @@ size_t GetLex(const char* s, StackTok_t* tokens, StackString_t* variables, Stack
             char* func_name  = strndup(s, len_func_name);
             s += len_func_name;
         
-            for (int index_func = 0; index_func < functions->size; index_func++)
+            int index_func = index_func_in_stk(functions, func_name);
+            
+            if (index_func == NO_INDEX)
             {
-                if (strcmp(func_name, functions->data[index_func]) == 0)
-                {
-                    free(func_name);
-                    func_need_in_push = NO;
-                }
+                STRING_PUSH(functions, func_name);
+                node->value.index_var = functions->size - 1; 
             }
-
-            if (func_need_in_push) STRING_PUSH(functions, func_name);
-            node->value.index_var = functions->size - 1;
+            else 
+            {
+                node->value.index_var = index_func;
+            }
             
             TOKPUSH(*tokens, node);
             continue;
@@ -863,3 +861,14 @@ int node_is_logical(CompNode_t* node)
 
     return NO;
 }
+
+int index_func_in_stk(StackString_t* functions, char* func_name)
+{
+    for (int index = 0; index < functions->size; index++)
+    {
+        if (strcmp(func_name, functions->data[index]) == 0) return index;
+    }
+
+    return NO_INDEX;
+}
+

@@ -32,10 +32,14 @@ CompNode_t* GetPermissionExp (PARAMS_FUNC);
 CompNode_t* GetVarOrNum      (PARAMS_FUNC);
 CompNode_t* GetVariable      (PARAMS_FUNC);
 CompNode_t* GetNumber        (PARAMS_FUNC);
+CompNode_t* GetProto         (PARAMS_FUNC);
 
 CompNode_t* GetDrawRAM       (PARAMS_FUNC);
 
 int node_is_op(CompNode_t* node, Operator_val_t val);
 int node_is_logical(CompNode_t* node);
+int index_func_in_stk(StackString_t* functions, char* func_name);
+
+#define NO_INDEX -1
 
 #endif

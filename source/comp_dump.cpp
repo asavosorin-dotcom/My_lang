@@ -137,12 +137,17 @@ void CompDumpNodeString(CompNode_t* node, FILE* file_dump)
         case VAR_INIT:
             PRINT_NODE_IMAGE(" (\'%s\')", "\"#00ccffff\"", node->value.var);
             break;
+
         case FUNC_INIT:
             PRINT_NODE_IMAGE(" (\'%s\')", "\"#a600ffff\"", node->value.var);
             break;
 
+        case PROTO:
+            PRINT_NODE_IMAGE(" (\'%s\')", "\"#00ccffff\"", "PROTO");
+            break;
+
         default:
-            printf(BOLD_RED "This type doesn't exist\n" RESET);
+            PRINT_ERR("This type doesn't exist\n");
     }
 
     if (node->left != NULL) 

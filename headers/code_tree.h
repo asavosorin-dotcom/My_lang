@@ -17,4 +17,8 @@ void CompPrintNode(const CompNode_t* node, FILE* file_print, StackString_t* vari
 void CompPrintNodeMiddle(const CompNode_t* node, FILE* file_print);
 CompNode_t* ReadNodeBack(char* buffer, StackString_t* variables, StackFunc_t* functions);
 
+int index_func_in_stk(StackFunc_t* functions, char* func_name);
+
+#define NO_INDEX -1
+
 #endif
