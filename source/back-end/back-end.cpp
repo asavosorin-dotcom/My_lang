@@ -21,6 +21,7 @@ FILE* file_asm = fopen("./compile_files/file_asm.s", "w");
 // Во-первых при обращении к параметрам в стеке надо + поменять на -, во вторых из-за stdcall надо менять арифметику расчета адреса. Наверное проще всего переменные тоже пушить в обратном поярдке в стек, если это параметры
 // ======================================================================================================
 int count_label = 0;
+int count_func  = 0;
 
 void MakeAsmCode(CompNode_t* root, StackString_t* variables, StackFunc_t* functions)
 {
@@ -42,7 +43,7 @@ void MakeAsmNode(CompNode_t* node, StackString_t* variables, StackFunc_t* functi
     {
         case FUNC_INIT:
         {
-            // тут должна быть метка на функцию    
+            count_func++;
             int index_func = node->value.index_var;
             Function_t* func_init = &(functions->data[index_func]);
 
@@ -69,6 +70,7 @@ void MakeAsmNode(CompNode_t* node, StackString_t* variables, StackFunc_t* functi
 
             MakeAsmNode(node->right, variables, functions, func_init);            
             // StackPrint(variables);
+            $("END_FUNC%d:\n", count_func);
             $("add rsp, %d * 8\n", count_var);
             // aa("end_params = [%d]\n", func_init->end_vars);
             
@@ -212,28 +214,28 @@ void MakeAsmOper(CompNode_t* node, StackString_t* variables, StackFunc_t* functi
         }
         
         case ADD:
-            MakeAsmNode(node->left, variables, functions, func);
+            MakeAsmNode(node->right, variables, functions, func);
             // $("mov rbx, rax\n");
             $("push rax\n");
-            MakeAsmNode(node->right, variables, functions, func);
+            MakeAsmNode(node->left, variables, functions, func);
             $("pop rbx\n");
             $("add rax, rbx\n");
             break;
 
         case SUB:
-            MakeAsmNode(node->left, variables, functions, func);
             // $("mov rbx, rax\n");
-            $("push rax\n");
             MakeAsmNode(node->right, variables, functions, func);
+            $("push rax\n");
+            MakeAsmNode(node->left, variables, functions, func);
             $("pop rbx\n");
             $("sub rax, rbx\n");
             break;
        
         case MUL:
-            MakeAsmNode(node->left, variables, functions, func);
+            MakeAsmNode(node->right, variables, functions, func);
             // $("mov rbx, rax\n");
             $("push rax\n");
-            MakeAsmNode(node->right, variables, functions, func);
+            MakeAsmNode(node->left, variables, functions, func);
             $("pop rbx\n");
             $("mul rax, rbx\n");
             break;
@@ -250,6 +252,7 @@ void MakeAsmOper(CompNode_t* node, StackString_t* variables, StackFunc_t* functi
 
         case RETURN:
             MakeAsmNode(node->left, variables, functions, func);
+            $("jmp END_FUNC%d\n", count_func); // возможно могут быть одинаковые миддлы
             break;
     
         case IF:
