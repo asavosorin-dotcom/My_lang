@@ -257,7 +257,14 @@ void MakeAsmOper(CompNode_t* node, StackString_t* variables, StackFunc_t* functi
             MakeAsmNode(node->left, variables, functions, func);
             $("jmp END_FUNC%d\n", count_func); // возможно могут быть одинаковые миддлы
             break;
-    
+   
+        case SQRT:
+            MakeAsmNode(node->left, variables, functions, func);
+            $("cvtsi2ss xmm0, rax\n");
+            $("sqrtss xmm0, xmm0\n");
+            $("cvttss2si rax, xmm0\n");
+            break;
+            
         case IF:
             MakeAsmIf(node, variables, functions, func);
             break;
