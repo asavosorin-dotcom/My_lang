@@ -24,6 +24,7 @@ int count_label = 0;
 
 void MakeAsmCode(CompNode_t* root, StackString_t* variables, StackFunc_t* functions)
 {
+    PrintStdLib();    
     $("section .text\n"); 
     $("global _start\n"); 
     // в первой версии можно просто печатать в файл print.s 
@@ -80,10 +81,10 @@ void MakeAsmNode(CompNode_t* node, StackString_t* variables, StackFunc_t* functi
             int index_func = node->value.index_var;
             Function_t* func_init = &(functions->data[index_func]);
 
-            PushFuncArgs(node->left, variables, func_init);
+            PushFuncArgs(node->left, variables, func); //11111
 
            $("call %s\n", func_init->name);
-           $("add rsp, %d * 8\n", func_init->middle - func_init->begin_params - 2); // -2 _CALL_ADR_ _PUSH_RBP_
+           $("add rsp, %d * 8\n", func_init->middle - func_init->begin_params - 2 + 1); // -2 _CALL_ADR_ _PUSH_RBP_
             break;
         }
 
@@ -107,6 +108,9 @@ void MakeAsmNode(CompNode_t* node, StackString_t* variables, StackFunc_t* functi
 
         case NUM:
             $("mov rax, %d\n", node->value.num);
+            break;
+
+        default:
             break;
     }
 }
@@ -152,6 +156,7 @@ void PushFuncArgs(CompNode_t* node, StackString_t* variables, Function_t* func)
     switch (node->type)
     {
         case NUM:
+            // PRINT_ERR("func_name = %s\n", func->name);
             $("push %d\n", node->value.num);
             break;
 
@@ -351,4 +356,13 @@ int GetCountVariables(CompNode_t* node, int count_now)
     count += GetCountVariables(node->right, count);
     
     return count;
+}
+
+void PrintStdLib(void)
+{
+    const char* stdlib_name = "print.s";
+    char* stdlib_code = CreateBuffer(stdlib_name).buff + 1;
+    $("%s\n\n", stdlib_code);
+
+    free(stdlib_code - 1);
 }

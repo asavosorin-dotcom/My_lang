@@ -19,4 +19,6 @@ void MakeAsmIf        (CompNode_t* node, StackString_t* variables, StackFunc_t* 
 void MakeAsmWhile     (CompNode_t* node, StackString_t* variables, StackFunc_t* functions, Function_t* func);
 int GetCountVariables (CompNode_t* node, int count_now);
 
+void PrintStdLib(void);
+
 #endif

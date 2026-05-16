@@ -1,23 +1,16 @@
+proto print ;
+
 func sum (var a, var c, var d)
 {
-	while (a > 0)
-	{
-		var sumint = 0;
-		
-		while (a > 0)
-		{
-			sumint = sumint + a;
-			a = a - 1;
-		};
-
-		sumint = sumint + c + d;
-	};
-
-	return sumint;
+	var num1 = a + c;
+	num1 = num1 + d;
+	return num1;
 };
 
 func _start()
 {
-	var c = sum(9, 7, 13);
+	var c = sum(12, 13, 15);
 	print(c);
+	print(10);
+	print(11);
 };
