@@ -89,6 +89,7 @@ Type_inf_t arr_types[TYPE_CAPASITY] =  {"NUM"      , NUM      ,
                                         "VAR_INIT" , VAR_INIT ,  
                                         "FUNC"     , FUNC     ,
                                         "FUNC_INIT", FUNC_INIT,
+                                        "PROTO"    , PROTO    ,
                                        };
 
 Condition_Jump_t arr_conditions[CONDITIONS_CAPACITY] = {EQUANT,    "jne ", 

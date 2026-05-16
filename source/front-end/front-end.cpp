@@ -65,10 +65,40 @@ size_t GetLex(const char* s, StackTok_t* tokens, StackString_t* variables, Stack
 
         if (strncmp(s, "func", 4) == 0)
         {
+            Flag_t func_need_in_push = YES;
+
             node = CompNodeCtor(FUNC_INIT);
             node->num_string = count_line;
 
             s += 4;
+            s += skip_space(s);
+            
+            int len_func_name = get_len_name(s); 
+            char* func_name  = strndup(s, len_func_name);
+            s += len_func_name;
+        
+            for (int index_func = 0; index_func < functions->size; index_func++)
+            {
+                if (strcmp(func_name, functions->data[index_func]) == 0)
+                {
+                    free(func_name);
+                    func_need_in_push = NO;
+                }
+            }
+
+            if (func_need_in_push) STRING_PUSH(functions, func_name);
+            node->value.index_var = functions->size - 1;
+            
+            TOKPUSH(*tokens, node);
+            continue;
+        }
+        
+        if (strncmp(s, "proto", 5) == 0) // нужно сделать проверку повторного прототипа
+        {
+            node = CompNodeCtor(PROTO);
+            node->num_string = count_line;
+
+            s += 5;
             s += skip_space(s);
             
             int len_func_name = get_len_name(s); 
@@ -176,7 +206,7 @@ size_t GetLex(const char* s, StackTok_t* tokens, StackString_t* variables, Stack
 
         PRINT_ERR("Syntax_error: %s\n", s);
     }
-
+    // StackTokPrint(tokens, __LINE__);
     // printf("---------------------------------------\n");
     // printf(BOLD_GREEN "Tokens SUCCESS!\n" RESET);
     return tokens->size;
@@ -208,7 +238,7 @@ int get_len_name(const char* s)
 CompNode_t* GetGeneral(StackTok_t* tokens, StackString_t* variables)
 {
     StackInt_t init_index_var = {};
-    INIT_INTSTACK(init_index_var, 7);
+    INIT_INTSTACK(init_index_var, 8);
     
     int token_pos = 0;
     CompNode_t* node = GetOperation(tokens, &token_pos, &init_index_var, variables);
@@ -246,9 +276,10 @@ CompNode_t* GetOperation(PARAMS_FUNC)
     TOKEN_NULL
     
     CompNode_t* node_left = GetIf(PARAMS_FUNC_CALL);
+    if (node_left == NULL) node_left = GetProto   (PARAMS_FUNC_CALL);
     if (node_left == NULL) node_left = GetFunction(PARAMS_FUNC_CALL);
     if (node_left == NULL) node_left = GetReturn  (PARAMS_FUNC_CALL);
-    if (node_left == NULL) node_left = GetPrint   (PARAMS_FUNC_CALL);
+    // if (node_left == NULL) node_left = GetPrint   (PARAMS_FUNC_CALL);
     if (node_left == NULL) node_left = GetDraw    (PARAMS_FUNC_CALL);
     if (node_left == NULL) node_left = GetEquat   (PARAMS_FUNC_CALL);
     if (node_left == NULL) node_left = GetDrawRAM (PARAMS_FUNC_CALL);
@@ -364,6 +395,16 @@ CompNode_t* GetFunction(PARAMS_FUNC)
     return func_init;
 }
 
+CompNode_t* GetProto(PARAMS_FUNC)
+{
+    if (Token->type != PROTO) return NULL;
+
+    CompNode_t* proto_func = Token;
+    (*token_pos)++;
+    
+    return proto_func;
+}
+
 CompNode_t* GetCommas(PARAMS_FUNC)
 {
     // CompNode_t* param = GetVarOrNum(PARAMS_FUNC_CALL); // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -383,23 +424,23 @@ CompNode_t* GetCommas(PARAMS_FUNC)
     return param;
 }
 
-CompNode_t* GetPrint(PARAMS_FUNC)
-{
-    TOKEN_NULL
-
-    if (!node_is_op(Token, PRINT)) return NULL;
-
-    CompNode_t* command = Token;
-    (*token_pos)++;
-
-    check_for(PAP_OPEN, "(");
-    CompNode_t* arg = GetVarOrNum(PARAMS_FUNC_CALL);
-    check_for(PAP_CLOSE, ")");
-
-    command->left = arg;
-
-    return command;
-}
+// CompNode_t* GetPrint(PARAMS_FUNC)
+// {
+//     TOKEN_NULL
+//
+//     if (!node_is_op(Token, PRINT)) return NULL;
+//
+//     CompNode_t* command = Token;
+//     (*token_pos)++;
+//
+//     check_for(PAP_OPEN, "(");
+//     CompNode_t* arg = GetVarOrNum(PARAMS_FUNC_CALL);
+//     check_for(PAP_CLOSE, ")");
+//
+//     command->left = arg;
+//
+//     return command;
+// }
 
 CompNode_t* GetDraw(PARAMS_FUNC)
 {

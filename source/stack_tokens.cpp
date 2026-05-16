@@ -431,24 +431,28 @@ size_t StackTokHash(StackTok_t* stk) {
 
 #endif
 
-// int StackTokPrint(StackTok_t* stk, int line) {
-//     int err = 0;
-    
-//     #ifdef DEBUG
-//     err = STACKTokVERIFY(stk);
-//     #endif
+int StackTokPrint(StackTok_t* stk, int line) {
+    int err = 0;
 
-//     #ifdef CANARY
-//     for (size_t i = 1; i < stk->size; i++) {
-//         printf(TYPEELEM " ", stk->data[i]);
-//     }
-//     #else 
-//     for (size_t i = 0; i < stk->size; i++) {
-//         printf(TYPEELEM " ", stk->data[i]);
-//     }
-//     #endif
+    #ifdef DEBUG
+    err = STACKTokVERIFY(stk);
+    #endif
 
-//     printf("\n");
+    #ifdef CANARY
+    for (size_t i = 1; i < stk->size; i++) {
+        printf(TYPEELEM " ", stk->data[i]);
+    }
+    #else 
+    printf("\n++++++++++++TOKENS++++++++++++++++\n");
 
-//     return err;
-// }
+    for (size_t i = 0; i < stk->size; i++) {
+        printf("%s\n", arr_types[stk->data[i]->type].name);
+    }
+
+    printf("\n+++++++++++++++++++++++++++++++++++\n");
+    #endif
+
+    printf("\n");
+
+    return err;
+}

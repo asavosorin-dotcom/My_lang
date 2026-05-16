@@ -1,4 +1,5 @@
 #include "../headers/compile.h"
+#define MIDDLE
 
 CompNode_t* CompNodeCtor(Type_t type)
 {
@@ -54,8 +55,15 @@ void CompDtor(CompNode_t* node)
     
     // printf("node_free[%p]\n", node);
     
-    if ((node->type == VAR))
+    #ifdef MIDDLE
+    if ((node->type == VAR) || (node->type == FUNC) || (node->type == FUNC_INIT) || (node->type == VAR_INIT))
         free(node->value.var);
+    #endif
+
+    #ifdef BACK_END
+    if (node->type == VAR)
+        free(node->value.var);
+    #endif
 
     if (node->left != NULL)
         CompDtor(node->left);
