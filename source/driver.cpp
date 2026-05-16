@@ -19,10 +19,10 @@ int main(int argc, char* argv[])
     sprintf(buffer + len, "./back\n%n", &count);
     len += count;
 
-    sprintf(buffer + len, "./asm code_asm.asm\n%n", &count);
+    sprintf(buffer + len, "nasm -f elf64 ./compile_files/file_asm.s\n%n", &count);
     len += count;
 
-    sprintf(buffer + len, "./proc\n");
+    sprintf(buffer + len, "ld ./compile_files/print.o ./compile_files/file_asm.o -o prog\n");
 
     system(buffer);
     free(buffer);

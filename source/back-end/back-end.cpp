@@ -26,6 +26,7 @@ void MakeAsmCode(CompNode_t* root, StackString_t* variables, StackFunc_t* functi
 {
     $("section .text\n"); 
     $("global _start\n"); 
+    // в первой версии можно просто печатать в файл print.s 
     MakeAsmNode(root,variables, functions, NULL);
     $("mov rax, 0x3c\n");
     $("xor rdx, rdx\n");
@@ -203,7 +204,6 @@ void MakeAsmOper(CompNode_t* node, StackString_t* variables, StackFunc_t* functi
         }
         
         case ADD:
-        {
             MakeAsmNode(node->left, variables, functions, func);
             // $("mov rbx, rax\n");
             $("push rax\n");
@@ -211,7 +211,34 @@ void MakeAsmOper(CompNode_t* node, StackString_t* variables, StackFunc_t* functi
             $("pop rbx\n");
             $("add rax, rbx\n");
             break;
-        }
+
+        case SUB:
+            MakeAsmNode(node->left, variables, functions, func);
+            // $("mov rbx, rax\n");
+            $("push rax\n");
+            MakeAsmNode(node->right, variables, functions, func);
+            $("pop rbx\n");
+            $("sub rax, rbx\n");
+            break;
+       
+        case MUL:
+            MakeAsmNode(node->left, variables, functions, func);
+            // $("mov rbx, rax\n");
+            $("push rax\n");
+            MakeAsmNode(node->right, variables, functions, func);
+            $("pop rbx\n");
+            $("mul rax, rbx\n");
+            break;
+
+        
+        case DIV:
+            MakeAsmNode(node->left, variables, functions, func);
+            // $("mov rbx, rax\n");
+            $("push rax\n");
+            MakeAsmNode(node->right, variables, functions, func);
+            $("pop rbx\n");
+            $("div rax, rbx\n");
+            break;
 
         case RETURN:
             MakeAsmNode(node->left, variables, functions, func);
