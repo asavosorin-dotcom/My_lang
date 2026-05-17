@@ -237,8 +237,8 @@ void MakeAsmOper(CompNode_t* node, StackString_t* variables, StackFunc_t* functi
             $("push rax\n");
             MakeAsmNode(node->left, variables, functions, func);
             $("pop rbx\n");
-            $("mul rbx\n");
-            $("and rdx, 1 << 31\n");
+            $("imul rbx\n");
+            $("and rdx, 1 << 63\n");
             $("or rax,  rdx\n");
             break;
         
