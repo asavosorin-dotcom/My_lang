@@ -6,6 +6,7 @@
 
 #include "../code_tree.h"
 #include "../stack_int.h"
+#include "traslate_nasm.h"
 
 void MakeAsmNode(CompNode_t* node, StackString_t* variables, StackFunc_t* functions, Function_t* func);
 void MakeAsmCode(CompNode_t* root, StackString_t* variables, StackFunc_t* functions);
