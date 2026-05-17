@@ -228,7 +228,7 @@ int get_len_name(const char* s)
     do {
         var_len++;
         s++;
-    } while (isalnum(*s));
+    } while (isalnum(*s) || (*s == '_'));
 
     return var_len;
 }
@@ -670,8 +670,8 @@ CompNode_t* GetCommand(PARAMS_FUNC)
     CompNode_t* command = Token;
     (*token_pos)++;
 
-    // CompNode_t* argument = GetPermissionExp(PARAMS_FUNC_CALL); //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    CompNode_t* argument = GetCommas(PARAMS_FUNC_CALL);
+    CompNode_t* argument = GetPermissionExp(PARAMS_FUNC_CALL); //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // CompNode_t* argument = GetCommas(PARAMS_FUNC_CALL);
     command->left = argument;
     // command->left->parent = command;
 

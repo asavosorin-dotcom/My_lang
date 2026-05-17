@@ -94,8 +94,8 @@ Type_inf_t arr_types[TYPE_CAPASITY] =  {"NUM"      , NUM      ,
 
 Condition_Jump_t arr_conditions[CONDITIONS_CAPACITY] = {EQUANT,    "jne ", 
                                                         BELOW_EQ,  "jg ", 
-                                                        ABOVE_EQ,  "jb ",
+                                                        ABOVE_EQ,  "jl ",
                                                         NO_EQUANT, "je ",
                                                         BELOW,     "jge ", 
-                                                        ABOVE,     "jbe ", 
+                                                        ABOVE,     "jle ", 
                                                        };

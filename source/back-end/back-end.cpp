@@ -1,7 +1,7 @@
 #include "../../headers/back-end/back-end.h"
 
 #define aa(...) printf(__VA_ARGS__)
-#define $(...) aa(__VA_ARGS__); fprintf(file_asm, __VA_ARGS__)
+#define $(...)  fprintf(file_asm, __VA_ARGS__)
 #define ERROR(...) fprintf(stderr, BOLD_RED  __VA_ARGS__); fprintf(stderr, RESET);
 
 int node_is_op(CompNode_t* node, Operator_val_t val);
@@ -371,13 +371,15 @@ int GetCountVariables(CompNode_t* node, int count_now)
     return count;
 }
 
-#define MAKE_STD_FUNC(funcname)     const char* funcname ## _std = #funcname".s";                          \
-                                    char* funcname ## _code = CreateBuffer(funcname ## _std).buff + 1; \
-                                    $("%s\n\n", funcname ## _code);                                    \
+#define MAKE_STD(funcname)          const char* funcname ## _std = #funcname".s";                          \
+                                    char* funcname ## _code = CreateBuffer(funcname ## _std).buff + 1;     \
+                                    $("%s\n\n", funcname ## _code);                                        \
                                     free(funcname ## _code - 1);
 
 void PrintStdLib(void)
 {
-    MAKE_STD_FUNC(print)
-    MAKE_STD_FUNC(scan)
+    MAKE_STD(print)
+    MAKE_STD(scan)
+    MAKE_STD(data)
+    MAKE_STD(printchar)
 }
