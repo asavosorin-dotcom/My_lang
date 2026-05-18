@@ -1,4 +1,5 @@
 #include "../../headers/back-end/back-end.h"
+// #include "elf.h"
 
 #define aa(...) printf(__VA_ARGS__)
 #define $(...)  fprintf(file_asm, __VA_ARGS__)
@@ -8,6 +9,8 @@ int node_is_op(CompNode_t* node, Operator_val_t val);
 int get_index_var(CompNode_t* node, StackString_t* variables, Function_t* func);
 Flag_t node_is_logical(CompNode_t* node);
 // брать название из ключей компилляции
+int adress = 0;
+
 FILE* file_asm = fopen("./compile_files/file_asm.s", "w");
 
 // ============================================== Rules =================================================
@@ -19,7 +22,12 @@ FILE* file_asm = fopen("./compile_files/file_asm.s", "w");
 // ------------------------------------------------------------------------------------------------------
 // Возможно у if будет счетчик, который увеличивается, когда есть if, и уменьшается, когда тело if заканчивается
 // Во-первых при обращении к параметрам в стеке надо + поменять на -, во вторых из-за stdcall надо менять арифметику расчета адреса. Наверное проще всего переменные тоже пушить в обратном поярдке в стек, если это параметры
+// ------------------------------------------------------------------------------------------------------
+// Сделать структуру массивов для меток функций, lbl_begin, lbl_end
+// Сделать массив, чтобы потом проставлять, в нужные места  
+// Просто двойной проход как это обычно делалось, оставить место для меток
 // ======================================================================================================
+
 int count_label = 0;
 int count_func  = 0;
 
@@ -30,9 +38,7 @@ void MakeAsmCode(CompNode_t* root, StackString_t* variables, StackFunc_t* functi
     $("global _start\n"); 
     // в первой версии можно просто печатать в файл print.s 
     MakeAsmNode(root,variables, functions, NULL);
-    $("mov rax, 0x3c\n");
-    $("xor rdx, rdx\n");
-    $("syscall\n");
+    _exit;
 }
 
 void MakeAsmNode(CompNode_t* node, StackString_t* variables, StackFunc_t* functions, Function_t* func)
@@ -47,7 +53,8 @@ void MakeAsmNode(CompNode_t* node, StackString_t* variables, StackFunc_t* functi
             int index_func = node->value.index_var;
             Function_t* func_init = &(functions->data[index_func]);
 
-            $("%s:\n", func_init->name);
+            $("%s:\n", func_init->name); // здесь добавлять функцию 
+                                         
             push_reg(rbp); //$("push rbp\n");
             mov_reg_reg(rbp, rsp);// $("mov rbp, rsp\n");
 
@@ -66,16 +73,16 @@ void MakeAsmNode(CompNode_t* node, StackString_t* variables, StackFunc_t* functi
             // aa("middle_params = [%d]\n", func_init->middle);
             int count_var = GetCountVariables(node->right, 0);
             func_init->end_vars = func_init->middle + count_var;
-            $("sub rsp, %d * 8\n", count_var);
+            sub_reg_imm8(rsp, count_var * 8); // $("sub rsp, %d * 8\n", count_var);
 
             MakeAsmNode(node->right, variables, functions, func_init);            
             // StackPrint(variables);
             $("END_FUNC%d:\n", count_func);
-            $("add rsp, %d * 8\n", count_var);
+            add_reg_imm8(rsp, count_var * 8); // $("add rsp, %d * 8\n", count_var);
             // aa("end_params = [%d]\n", func_init->end_vars);
             
             pop_reg(rbp); // $("pop rbp\n");
-            if (strcmp(func_init->name, "_start") != 0) {$("ret\n");}
+            if (strcmp(func_init->name, "_start") != 0) {ret ;}// $("ret\n");}
             break;
         }
         case FUNC: 
@@ -86,7 +93,7 @@ void MakeAsmNode(CompNode_t* node, StackString_t* variables, StackFunc_t* functi
             PushFuncArgs(node->left, variables, func); //11111
 
            $("call %s\n", func_init->name);
-           $("add rsp, %d * 8\n", func_init->middle - func_init->begin_params - 2 + 1); // -2 _CALL_ADR_ _PUSH_RBP_
+           add_reg_imm8(rsp, (func_init->middle - func_init->begin_params - 1) * 8); // $("add rsp, %d * 8\n", func_init->middle - func_init->begin_params - 2 + 1); // -2 _CALL_ADR_ _PUSH_RBP_
             break;
         }
 
@@ -104,12 +111,12 @@ void MakeAsmNode(CompNode_t* node, StackString_t* variables, StackFunc_t* functi
         case VAR:
         {
             int relative_index = get_index_var(node, variables, func) - func->middle;
-            $("mov rax, [rbp - (%d) * 8]\n", relative_index);
+            mov_reg_mem(rax, rbp, relative_index * (-8)); // $("mov rax, [rbp - (%d) * 8]\n", relative_index);
             break;
         }
 
         case NUM:
-            $("mov rax, %d\n", node->value.num);
+             mov_reg_imm32(rax, node->value.num); // $("mov rax, %d\n", node->value.num);
             break;
 
         default:
@@ -159,14 +166,14 @@ void PushFuncArgs(CompNode_t* node, StackString_t* variables, Function_t* func)
     {
         case NUM:
             // PRINT_ERR("func_name = %s\n", func->name);
-            $("push %d\n", node->value.num);
+            push_imm8(node->value.num); // $("push %d\n", node->value.num);
             break;
 
         case VAR:
         {
             int index = get_index_var(node, variables, func);
             int relative_index_var = index - func->middle;
-            $("mov rax, [rbp - (%d) * 8]\n", relative_index_var); // хранить в таблице имен с переменными их размеры
+            mov_reg_mem(rax, rbp, relative_index_var * (-8)); // $("mov rax, [rbp - (%d) * 8]\n", relative_index_var); // хранить в таблице имен с переменными их размеры
             push_reg(rax);// $("push rax\n");
             break;
         }
@@ -208,7 +215,7 @@ void MakeAsmOper(CompNode_t* node, StackString_t* variables, StackFunc_t* functi
 
             int relative_index = get_index_var(node->left, variables, func) - func->middle; 
             MakeAsmNode(node->right, variables, functions, func);
-            $("mov [rbp - (%d) * 8], rax\n", relative_index);
+            mov_mem_reg(rbp, relative_index * (-8), rax); // $("mov [rbp - (%d) * 8], rax\n", relative_index);
             break;
 //  Дописать!!!!==========================================================================
         }
@@ -220,7 +227,7 @@ void MakeAsmOper(CompNode_t* node, StackString_t* variables, StackFunc_t* functi
             MakeAsmNode(node->left, variables, functions, func);
             pop_reg(rbx); // $("pop rbx\n");
 
-            $("add rax, rbx\n");
+            add_reg_reg(rax, rbx); // $("add rax, rbx\n");
             break;
 
         case SUB:
@@ -228,8 +235,8 @@ void MakeAsmOper(CompNode_t* node, StackString_t* variables, StackFunc_t* functi
             MakeAsmNode(node->right, variables, functions, func);
             push_reg(rax); //$("push rax\n");
             MakeAsmNode(node->left, variables, functions, func);
-            $("pop rbx\n");
-            $("sub rax, rbx\n");
+            pop_reg(rbx); // $("pop rbx\n");
+            sub_reg_reg(rax, rbx); // $("sub rax, rbx\n");
             break;
        
         case MUL:
@@ -239,21 +246,20 @@ void MakeAsmOper(CompNode_t* node, StackString_t* variables, StackFunc_t* functi
             MakeAsmNode(node->left, variables, functions, func);
             pop_reg(rbx); // $("pop rbx\n");
 
-            $("imul rbx\n");
-            $("and rdx, 1 << 63\n");
-            $("or rax,  rdx\n");
+            imul_reg(rbx); // $("imul rbx\n");
+            or_reg_reg(rax, rdx); // $("or rax, rdx\n");
             break;
         
         case DIV:
-            $("xor rdx, rdx\n");
+            xor_reg_reg(rdx, rdx); // $("xor rdx, rdx\n");
             MakeAsmNode(node->right, variables, functions, func);
             // $("mov rbx, rax\n");
             push_reg(rax); // $("push rax\n");
             MakeAsmNode(node->left, variables, functions, func);
             pop_reg(rbx); // $("pop rbx\n");
 
-            $("cqo\n");
-            $("idiv rbx\n");
+            cqo            // $("cqo\n");
+            idiv_reg(rbx); // $("idiv rbx\n");
             break;
 
         case RETURN:
@@ -263,9 +269,7 @@ void MakeAsmOper(CompNode_t* node, StackString_t* variables, StackFunc_t* functi
    
         case SQRT:
             MakeAsmNode(node->left, variables, functions, func);
-            $("cvtsi2ss xmm0, rax\n");
-            $("sqrtss xmm0, xmm0\n");
-            $("cvttss2si rax, xmm0\n");
+            sqrt_rax();
             break;
             
         case IF:
@@ -285,12 +289,16 @@ void MakeAsmOper(CompNode_t* node, StackString_t* variables, StackFunc_t* functi
 void MakeAsmIf(CompNode_t* node, StackString_t* variables, StackFunc_t* functions, Function_t* func)
 {
 // cmp and jump_condition 
-// должен быть массив соответствий jump_cond и условных операторов
-// есть два варианта: сравнивать разность с нулем или между собой,
-    MakeAsmCondition(node->left, variables, functions, func); // condition 
+    int adress_begin_cond = adress;
+    // проходка для определения конца тела if
+    MakeAsmCondition(node->left, variables, functions, func); // condition
+    // вот тут условный jump
+
+    int adress_end_cond = adress;
+
     int label_num = count_label;
     MakeAsmNode(node->right, variables, functions, func);
-    $("LBLEND%d:\n\n", label_num);
+     int adress_body_end = adress; // $("LBLEND%d:\n\n", label_num); // добавление метки в таблицу имен или сохранение адреса
 }
 
 void MakeAsmWhile(CompNode_t* node, StackString_t* variables, StackFunc_t* functions, Function_t* func)
@@ -313,19 +321,18 @@ Flag_t node_is_logical(CompNode_t* node)
 void MakeAsmCondition(CompNode_t* node, StackString_t* variables, StackFunc_t* functions, Function_t* func)
 {
     count_label++;
-    $("\n\nLBLCOND%d:\n", count_label);
+    adress_cond = adress; // $("\n\nLBLCOND%d:\n", count_label);
 
     if (node_is_logical(node))
     {
 
         MakeAsmNode(node->left, variables, functions, func);
-        // $("mov rbx, rax\n");
         push_reg(rax); //$("push rax\n");
         MakeAsmNode(node->right, variables, functions, func);
         pop_reg(rbx); // $("pop rbx\n");
 
         
-        $("cmp rbx, rax\n");
+        cmp_reg_reg(rbx, rax); // $("cmp rbx, rax\n");
 
         $("%s LBLEND%d\n", arr_conditions[node->value.oper - LOGIC_BEGIN].jump_name, count_label); // возможно придется поменять JUMP на противоположные
     }
@@ -334,7 +341,7 @@ void MakeAsmCondition(CompNode_t* node, StackString_t* variables, StackFunc_t* f
     {
         MakeAsmNode(node, variables, functions, func);
     
-        $("cmp rax, 0\n");
+        cmp_reg_imm8(rax, 0); // $("cmp rax, 0\n");
         $("je LBLEND%d\n", count_label);
     }
 }
@@ -389,3 +396,8 @@ void PrintStdLib(void)
     MAKE_STD(data)
     MAKE_STD(printchar)
 }
+
+// int GetAdressBodyEnd(CompNode_t* node)
+// {
+//
+// }

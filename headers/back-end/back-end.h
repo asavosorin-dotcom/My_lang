@@ -6,7 +6,14 @@
 
 #include "../code_tree.h"
 #include "../stack_int.h"
-#include "traslate_nasm.h"
+#include "translate_nasm.h"
+
+typedef struct 
+{
+    int   adress_label;
+    char* label_name;
+    int   index_in_buff;
+} Label_t;
 
 void MakeAsmNode(CompNode_t* node, StackString_t* variables, StackFunc_t* functions, Function_t* func);
 void MakeAsmCode(CompNode_t* root, StackString_t* variables, StackFunc_t* functions);
@@ -14,11 +21,11 @@ void MakeAsmCode(CompNode_t* root, StackString_t* variables, StackFunc_t* functi
 void ParsingParams(CompNode_t* node, StackString_t* variables, Function_t* func);
 void PushFuncArgs (CompNode_t* node, StackString_t* variables, Function_t* func);
 
-void MakeAsmOper      (CompNode_t* node, StackString_t* variables, StackFunc_t* functions, Function_t* func);
-void MakeAsmCondition (CompNode_t* node, StackString_t* variables, StackFunc_t* functions, Function_t* func);
-void MakeAsmIf        (CompNode_t* node, StackString_t* variables, StackFunc_t* functions, Function_t* func);
-void MakeAsmWhile     (CompNode_t* node, StackString_t* variables, StackFunc_t* functions, Function_t* func);
-int GetCountVariables (CompNode_t* node, int count_now);
+void MakeAsmOper       (CompNode_t* node, StackString_t* variables, StackFunc_t* functions, Function_t* func);
+void MakeAsmCondition  (CompNode_t* node, StackString_t* variables, StackFunc_t* functions, Function_t* func);
+void MakeAsmIf         (CompNode_t* node, StackString_t* variables, StackFunc_t* functions, Function_t* func);
+void MakeAsmWhile      (CompNode_t* node, StackString_t* variables, StackFunc_t* functions, Function_t* func);
+int  GetCountVariables (CompNode_t* node, int count_now);
 
 void PrintStdLib(void);
 

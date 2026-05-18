@@ -12,6 +12,7 @@
 extern struct Operator_t arr_operators[OP_CAPASITY];
 extern struct Type_inf_t arr_types[TYPE_CAPASITY];
 extern struct Condition_Jump_t arr_conditions[CONDITIONS_CAPACITY];
+
 enum Operator_val_t {
                      MATH_OP_BEGIN = 0,
                      ADD           = 0, 
